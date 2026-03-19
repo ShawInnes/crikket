@@ -36,8 +36,8 @@ interface S3StorageOptions {
   region: string
   endpoint?: string
   addressingStyle?: S3AddressingStyle
-  accessKeyId: string
-  secretAccessKey: string
+  accessKeyId?: string
+  secretAccessKey?: string
   publicUrl?: string
 }
 
@@ -62,10 +62,16 @@ export function createS3StorageProvider(
     }),
     requestChecksumCalculation: "WHEN_REQUIRED",
     responseChecksumValidation: "WHEN_REQUIRED",
-    credentials: {
-      accessKeyId: options.accessKeyId,
-      secretAccessKey: options.secretAccessKey,
-    },
+    // Omit credentials when keys are absent — the SDK credential chain
+    // (IRSA, instance profile, ECS task role, etc.) will be used instead.
+    ...(options.accessKeyId && options.secretAccessKey
+      ? {
+          credentials: {
+            accessKeyId: options.accessKeyId,
+            secretAccessKey: options.secretAccessKey,
+          },
+        }
+      : {}),
   })
 
   const getUrl = (filename: string): Promise<string> => {
@@ -370,25 +376,11 @@ function serializeCleanupError(error: unknown): string {
 }
 
 function getCloudStorageConfig(): S3StorageOptions {
-  const requiredKeys = [
-    ["STORAGE_BUCKET", env.STORAGE_BUCKET],
-    ["STORAGE_ACCESS_KEY_ID", env.STORAGE_ACCESS_KEY_ID],
-    ["STORAGE_SECRET_ACCESS_KEY", env.STORAGE_SECRET_ACCESS_KEY],
-  ] as const
-
-  const missingKeys = requiredKeys
-    .filter(([, value]) => !value)
-    .map(([name]) => name)
-
-  if (missingKeys.length > 0) {
+  if (!env.STORAGE_BUCKET) {
     throw new Error(
-      `Missing required cloud storage env vars: ${missingKeys.join(", ")}. Local storage support has been removed.`
+      "Missing required cloud storage env var: STORAGE_BUCKET. Local storage support has been removed."
     )
   }
-
-  const bucket = env.STORAGE_BUCKET!
-  const accessKeyId = env.STORAGE_ACCESS_KEY_ID!
-  const secretAccessKey = env.STORAGE_SECRET_ACCESS_KEY!
 
   const region = env.STORAGE_REGION ?? (env.STORAGE_ENDPOINT ? "auto" : null)
   if (!region) {
@@ -398,12 +390,12 @@ function getCloudStorageConfig(): S3StorageOptions {
   }
 
   return {
-    bucket,
+    bucket: env.STORAGE_BUCKET,
     region,
     endpoint: env.STORAGE_ENDPOINT,
     addressingStyle: env.STORAGE_ADDRESSING_STYLE,
-    accessKeyId,
-    secretAccessKey,
+    accessKeyId: env.STORAGE_ACCESS_KEY_ID,
+    secretAccessKey: env.STORAGE_SECRET_ACCESS_KEY,
     publicUrl: env.STORAGE_PUBLIC_URL,
   }
 }
