@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(static-analysis:semgrep)",
+      "Bash(bash -n /Users/shaw/devops/crikket/scripts/setup-local.sh)",
+      "WebSearch"
+    ]
+  }
+}

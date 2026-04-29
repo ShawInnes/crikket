@@ -37,19 +37,25 @@ packages/
 bun install
 ```
 
-3. Create environment files from the provided examples:
+3. Set up environment files:
 
 ```bash
-cp .env.example .env
-cp apps/web/.env.example apps/web/.env
-cp apps/server/.env.example apps/server/.env
+bun run setup:dev
+```
+
+This copies `apps/server/.env` and `apps/web/.env` from their examples and
+auto-generates secrets. Fill in `DATABASE_URL` and the URL vars it flags.
+
+The root `.env` is for Docker/self-hosting only and is not needed for local
+dev. If you are working on the docs or extension apps, copy their env files
+manually:
+
+```bash
 cp apps/docs/.env.example apps/docs/.env
 cp apps/extension/.env.example apps/extension/.env
 ```
 
-4. Fill in required environment values in the `.env` files you created.
-
-5. Start development:
+4. Start development:
 
 ```bash
 bun run dev

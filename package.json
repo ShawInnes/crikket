@@ -76,11 +76,13 @@
   },
   "type": "module",
   "scripts": {
+    "setup:dev": "./scripts/setup-local.sh",
     "dev": "turbo run dev",
     "build": "turbo run build",
     "check-types": "turbo run check-types",
     "dev:native": "turbo run dev --filter=native",
     "dev:web": "turbo run dev --filter=web",
+    "dev:testbed": "turbo run dev --filter=testbed",
     "dev:capture": "turbo run dev --filter=@crikket-io/capture",
     "dev:server": "turbo run dev --filter=server",
     "db:push": "turbo run db:push --filter=@crikket/db",

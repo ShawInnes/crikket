@@ -72,18 +72,14 @@ Useful links:
 
 ### Local development
 
-For contributor setup and app-specific environment details:
-
 ```bash
 bun install
-cp .env.example .env
-cp apps/web/.env.example apps/web/.env
-cp apps/server/.env.example apps/server/.env
-cp apps/docs/.env.example apps/docs/.env
-cp apps/extension/.env.example apps/extension/.env
+bun run setup:dev
 ```
 
-Then configure your env values, apply the database schema, and start the repo:
+The setup script copies the two required env files (`apps/server/.env` and
+`apps/web/.env`) and auto-generates secrets. Fill in `DATABASE_URL` and the
+URL vars it flags, then:
 
 ```bash
 bun run db:push
@@ -95,6 +91,10 @@ Default local ports:
 - `web`: `http://localhost:3001`
 - `server`: `http://localhost:3000`
 - `docs`: `http://localhost:4000`
+
+> **Note:** The root `.env` is for Docker/self-hosting only — not needed for
+> local dev. Docs and extension env files are optional; copy them manually if
+> you are working on those apps.
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full workflow.
 

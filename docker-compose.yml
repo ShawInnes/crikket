@@ -18,6 +18,41 @@ services:
       timeout: 5s
       retries: 10
 
+  rustfs_perms:
+    image: alpine
+    user: root
+    volumes:
+      - rustfs_data:/data
+    command: chown -R 10001:10001 /data
+    restart: "no"
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: crikket-rustfs
+    restart: unless-stopped
+    depends_on:
+      rustfs_perms:
+        condition: service_completed_successfully
+    environment:
+      RUSTFS_VOLUMES: /data
+      RUSTFS_ADDRESS: 0.0.0.0:9000
+      RUSTFS_CONSOLE_ADDRESS: 0.0.0.0:9001
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-rustfsadmin}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-rustfsadmin}
+      RUSTFS_REGION: auto
+    ports:
+      - "${RUSTFS_PORT:-9000}:9000"
+      - "${RUSTFS_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - rustfs_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:9000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
   server:
     image: ghcr.io/redpangilinan/crikket-server:latest
     pull_policy: always
@@ -30,6 +65,8 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+      rustfs:
+        condition: service_healthy
     environment:
       NODE_ENV: production
       PORT: 3000
@@ -88,3 +125,4 @@ services:
 
 volumes:
   postgres_data:
+  rustfs_data:
